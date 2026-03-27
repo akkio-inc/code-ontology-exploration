@@ -33,8 +33,8 @@ SPECIMENS: list[Specimen] = [
         until="2021-12-31",
     ),
     Specimen(
-        name="claude-code-action",
-        url="https://github.com/anthropics/claude-code-action",
+        name="openhands",
+        url="https://github.com/All-Hands-AI/OpenHands",
     ),
     Specimen(
         name="claudeos",

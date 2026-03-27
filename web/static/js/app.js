@@ -34,6 +34,7 @@
 
   // Initialize charts
   Timeline.init(document.getElementById("timeline-chart"));
+  Topology.init(document.getElementById("topology-dashboard"));
   Graph.init(document.getElementById("graph-chart"));
 
   // Wire up controls
@@ -71,16 +72,20 @@
 
     // Re-init after clearing
     Timeline.init(timelineEl);
+    Topology.init(document.getElementById("topology-dashboard"));
     Graph.init(graphEl);
 
     try {
-      const [timelineData, graphData] = await Promise.all([
+      const [timelineData, graphData, topoData] = await Promise.all([
         fetch(`/api/timeline/${name}`).then(r => r.ok ? r.json() : null),
         fetch(`/api/cochange/${name}`).then(r => r.ok ? r.json() : null),
+        fetch(`/api/topology/${name}`).then(r => r.ok ? r.json() : null),
       ]);
 
       const metric = document.getElementById("timeline-metric").value;
       Timeline.render(timelineData, metric);
+
+      Topology.render(topoData);
 
       const threshold = parseInt(document.getElementById("edge-weight").value);
       Graph.render(graphData, threshold);

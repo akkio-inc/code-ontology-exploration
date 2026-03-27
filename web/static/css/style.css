@@ -148,3 +148,117 @@ h2 {
   color: #555;
   font-size: 0.9rem;
 }
+
+/* Topology dashboard */
+#topology-dashboard {
+  width: 100%;
+  min-height: 100px;
+}
+
+.topo-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.topo-cards {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.topo-card {
+  background: #0d0d15;
+  border: 1px solid #1a1a2e;
+  border-radius: 8px;
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.topo-card-value {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.topo-card-label {
+  font-size: 0.7rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.topo-card-desc {
+  font-size: 0.65rem;
+  color: #555;
+}
+
+.topo-hist-row {
+  display: flex;
+  gap: 16px;
+}
+
+.topo-chart {
+  flex: 1;
+  background: #0d0d15;
+  border: 1px solid #1a1a2e;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.topo-chart h4 {
+  font-size: 0.75rem;
+  color: #888;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.topo-detail-row {
+  display: flex;
+  gap: 16px;
+}
+
+.topo-table {
+  flex: 1;
+  background: #0d0d15;
+  border: 1px solid #1a1a2e;
+  border-radius: 8px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.topo-table h4 {
+  font-size: 0.75rem;
+  color: #888;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.topo-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.7rem;
+}
+
+.topo-table th {
+  text-align: left;
+  color: #666;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-bottom: 1px solid #1a1a2e;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.topo-table td {
+  padding: 3px 8px;
+  color: #bbb;
+  border-bottom: 1px solid #111;
+  font-family: "SF Mono", "Cascadia Code", monospace;
+}
+
+.topo-table tr:hover td {
+  background: #12121f;
+}

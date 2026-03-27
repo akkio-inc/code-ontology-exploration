@@ -12,6 +12,7 @@ from code_ontology.repo_loader import ensure_repo
 from code_ontology.git_history import extract_history, save_history, load_history
 from code_ontology.cochange_graph import build_cochange_graph, save_cochange_graph
 from code_ontology.metrics import compute_timeline_metrics, save_timeline
+from code_ontology.topology import compute_topology, save_topology
 
 
 def run_specimen(name: str, skip_clone: bool = False, skip_extract: bool = False):
@@ -21,25 +22,29 @@ def run_specimen(name: str, skip_clone: bool = False, skip_extract: bool = False
     print(f"{'='*60}")
 
     if not skip_clone:
-        print("\n[1/4] Cloning repo...")
+        print("\n[1/5] Cloning repo...")
         ensure_repo(specimen)
 
     if not skip_extract:
-        print("\n[2/4] Extracting git history...")
+        print("\n[2/5] Extracting git history...")
         repo = ensure_repo(specimen)
         records = extract_history(repo, specimen)
         save_history(records, specimen)
     else:
-        print("\n[2/4] Loading cached history...")
+        print("\n[2/5] Loading cached history...")
 
-    print("\n[3/4] Computing timeline metrics...")
+    print("\n[3/5] Computing timeline metrics...")
     commits = load_history(specimen.name)
     slices = compute_timeline_metrics(commits)
     save_timeline(slices, specimen.name)
 
-    print("\n[4/4] Building co-change graph...")
+    print("\n[4/5] Building co-change graph...")
     graph = build_cochange_graph(commits)
     save_cochange_graph(graph, specimen.name)
+
+    print("\n[5/5] Computing topology metrics...")
+    topo = compute_topology(commits, graph)
+    save_topology(topo, specimen.name)
 
     print(f"\nDone: {specimen.name}")
 

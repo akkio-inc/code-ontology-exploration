@@ -205,3 +205,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Project-specific
+repos/*/
+data/raw/*.json
+data/processed/*.json
+data/derived/*.json
+.DS_Store

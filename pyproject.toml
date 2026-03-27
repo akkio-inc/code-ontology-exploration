@@ -1,0 +1,23 @@
+[project]
+name = "code-ontology-exploration"
+version = "0.1.0"
+description = "Visualizing structural differences between human-authored and agent-authored codebases"
+requires-python = ">=3.11"
+dependencies = [
+    "gitpython>=3.1",
+    "networkx>=3.0",
+    "fastapi>=0.110",
+    "uvicorn>=0.27",
+    "pydantic>=2.0",
+    "orjson>=3.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.3",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100

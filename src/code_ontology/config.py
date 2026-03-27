@@ -1,0 +1,50 @@
+"""Configuration for specimen repositories and analysis parameters."""
+
+from pathlib import Path
+from dataclasses import dataclass
+
+
+ROOT = Path(__file__).resolve().parents[2]
+REPOS_DIR = ROOT / "repos"
+DATA_DIR = ROOT / "data"
+RAW_DIR = DATA_DIR / "raw"
+PROCESSED_DIR = DATA_DIR / "processed"
+DERIVED_DIR = DATA_DIR / "derived"
+
+
+@dataclass(frozen=True)
+class Specimen:
+    name: str
+    url: str
+    # Which subdirectory to analyze (None = whole repo)
+    subpath: str | None = None
+    # Git log time window
+    since: str | None = None
+    until: str | None = None
+
+
+# The three specimens on the human → agent spectrum
+SPECIMENS: list[Specimen] = [
+    Specimen(
+        name="linux-fs",
+        url="https://github.com/torvalds/linux",
+        subpath="fs/",
+        since="2019-01-01",
+        until="2021-12-31",
+    ),
+    Specimen(
+        name="claude-code-action",
+        url="https://github.com/anthropics/claude-code-action",
+    ),
+    Specimen(
+        name="claudeos",
+        url="https://github.com/ssochi/ClaudeOS",
+    ),
+]
+
+
+def get_specimen(name: str) -> Specimen:
+    for s in SPECIMENS:
+        if s.name == name:
+            return s
+    raise ValueError(f"Unknown specimen: {name}. Known: {[s.name for s in SPECIMENS]}")

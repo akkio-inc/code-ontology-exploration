@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Ontology Explorer</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Code Ontology Explorer</h1>
+    <p class="subtitle">Structural signatures across the human → agent spectrum</p>
+    <div id="specimen-selector"></div>
+  </header>
+
+  <main>
+    <section id="timeline-section">
+      <h2>Timeline — Commit Activity Over Time</h2>
+      <div class="controls">
+        <label>Metric:
+          <select id="timeline-metric">
+            <option value="churn">Churn (lines changed)</option>
+            <option value="num_commits">Commit count</option>
+            <option value="unique_files_touched">Files touched</option>
+            <option value="unique_authors">Unique authors</option>
+            <option value="avg_files_per_commit">Avg files/commit</option>
+            <option value="file_concentration">File concentration</option>
+          </select>
+        </label>
+      </div>
+      <div id="timeline-chart"></div>
+    </section>
+
+    <section id="graph-section">
+      <h2>Co-Change Graph — Files That Change Together</h2>
+      <div class="controls">
+        <label>Min edge weight:
+          <input type="range" id="edge-weight" min="1" max="20" value="3">
+          <span id="edge-weight-val">3</span>
+        </label>
+      </div>
+      <div id="graph-chart"></div>
+    </section>
+  </main>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="/static/js/timeline.js"></script>
+  <script src="/static/js/graph.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

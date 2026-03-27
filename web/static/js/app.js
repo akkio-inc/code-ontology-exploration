@@ -3,6 +3,9 @@
  */
 
 (async function main() {
+  // Initialize info panel
+  InfoPanel.init();
+
   // Fetch available specimens
   const specimens = await fetch("/api/specimens").then(r => r.json());
 
@@ -37,16 +40,82 @@
   Topology.init(document.getElementById("topology-dashboard"));
   Graph.init(document.getElementById("graph-chart"));
 
-  // Wire up controls
+  // Wire up controls — timeline metric dropdown
   document.getElementById("timeline-metric").addEventListener("change", e => {
     Timeline.updateMetric(e.target.value);
+    InfoPanel.show("metric_" + e.target.value);
   });
 
+  // Wire up controls — edge weight slider
   const edgeSlider = document.getElementById("edge-weight");
   const edgeVal = document.getElementById("edge-weight-val");
   edgeSlider.addEventListener("input", e => {
     edgeVal.textContent = e.target.value;
     Graph.updateThreshold(parseInt(e.target.value));
+  });
+
+  // --- Info panel: section hover/scroll detection ---
+  // Update info panel when scrolling into a section
+  const sections = document.querySelectorAll("section[data-info]");
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
+        const key = entry.target.dataset.info;
+        InfoPanel.show(key);
+        // Highlight active section
+        sections.forEach(s => s.classList.remove("info-active"));
+        entry.target.classList.add("info-active");
+      }
+    });
+  }, { threshold: 0.3 });
+  sections.forEach(s => observer.observe(s));
+
+  // --- Info panel: topology card clicks ---
+  document.addEventListener("click", (e) => {
+    const card = e.target.closest(".topo-card");
+    if (card) {
+      const label = card.querySelector(".topo-card-label")?.textContent.trim().toLowerCase();
+      const keyMap = {
+        "modularity": "card_modularity",
+        "communities": "card_communities",
+        "clustering coeff": "card_clustering",
+        "components": "card_components",
+        "avg files/commit": "card_avg_files_commit",
+        "avg dirs/commit": "card_avg_dirs_commit",
+        "creation ratio": "card_creation_ratio",
+        "churn gini": "card_churn_gini",
+        "change entropy": "card_change_entropy",
+        "author entropy": "card_author_entropy",
+      };
+      const infoKey = keyMap[label];
+      if (infoKey) {
+        InfoPanel.show(infoKey);
+        // Visual feedback
+        document.querySelectorAll(".topo-card").forEach(c => c.classList.remove("info-selected"));
+        card.classList.add("info-selected");
+      }
+    }
+
+    // Topology chart clicks
+    const chart = e.target.closest(".topo-chart");
+    if (chart) {
+      const title = chart.querySelector("h4")?.textContent.trim();
+      const chartMap = {
+        "Files per Commit": "hist_files_per_commit",
+        "Directories per Commit": "hist_dirs_per_commit",
+        "Degree Distribution (log-log)": "hist_degree",
+      };
+      const infoKey = chartMap[title];
+      if (infoKey) InfoPanel.show(infoKey);
+    }
+
+    // Topology table clicks
+    const table = e.target.closest(".topo-table");
+    if (table) {
+      const title = table.querySelector("h4")?.textContent.trim();
+      if (title?.includes("Hotspot")) InfoPanel.show("table_hotspots");
+      if (title?.includes("Bridge")) InfoPanel.show("table_bridges");
+    }
   });
 
   // Handle window resize
@@ -56,7 +125,6 @@
     resizeTimeout = setTimeout(() => {
       Timeline.init(document.getElementById("timeline-chart"));
       Graph.init(document.getElementById("graph-chart"));
-      // Re-render current data
       const activeBtn = document.querySelector(".specimen-btn.active");
       if (activeBtn) loadSpecimen(activeBtn.dataset.name);
     }, 250);
@@ -84,6 +152,7 @@
 
       const metric = document.getElementById("timeline-metric").value;
       Timeline.render(timelineData, metric);
+      InfoPanel.show("metric_" + metric);
 
       Topology.render(topoData);
 

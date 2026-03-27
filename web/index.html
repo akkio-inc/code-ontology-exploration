@@ -13,42 +13,57 @@
     <div id="specimen-selector"></div>
   </header>
 
-  <main>
-    <section id="timeline-section">
-      <h2>Timeline — Commit Activity Over Time</h2>
-      <div class="controls">
-        <label>Metric:
-          <select id="timeline-metric">
-            <option value="churn">Churn (lines changed)</option>
-            <option value="num_commits">Commit count</option>
-            <option value="unique_files_touched">Files touched</option>
-            <option value="unique_authors">Unique authors</option>
-            <option value="avg_files_per_commit">Avg files/commit</option>
-            <option value="file_concentration">File concentration</option>
-          </select>
-        </label>
-      </div>
-      <div id="timeline-chart"></div>
-    </section>
+  <div class="app-layout">
+    <main>
+      <section id="timeline-section" data-info="timeline">
+        <h2>Timeline — Commit Activity Over Time</h2>
+        <div class="controls">
+          <label>Metric:
+            <select id="timeline-metric">
+              <option value="churn">Churn (lines changed)</option>
+              <option value="num_commits">Commit count</option>
+              <option value="unique_files_touched">Files touched</option>
+              <option value="unique_authors">Unique authors</option>
+              <option value="avg_files_per_commit">Avg files/commit</option>
+              <option value="file_concentration">File concentration</option>
+            </select>
+          </label>
+        </div>
+        <div id="timeline-chart"></div>
+      </section>
 
-    <section id="topology-section">
-      <h2>Structural Topology — Codebase Shape Metrics</h2>
-      <div id="topology-dashboard"></div>
-    </section>
+      <section id="topology-section" data-info="topology">
+        <h2>Structural Topology — Codebase Shape Metrics</h2>
+        <div id="topology-dashboard"></div>
+      </section>
 
-    <section id="graph-section">
-      <h2>Co-Change Graph — Files That Change Together</h2>
-      <div class="controls">
-        <label>Min edge weight:
-          <input type="range" id="edge-weight" min="1" max="20" value="3">
-          <span id="edge-weight-val">3</span>
-        </label>
+      <section id="graph-section" data-info="graph">
+        <h2>Co-Change Graph — Files That Change Together</h2>
+        <div class="controls">
+          <label>Min edge weight:
+            <input type="range" id="edge-weight" min="1" max="20" value="3">
+            <span id="edge-weight-val">3</span>
+          </label>
+        </div>
+        <div id="graph-chart"></div>
+      </section>
+    </main>
+
+    <aside id="info-panel">
+      <div class="info-panel-inner">
+        <div class="info-header">
+          <span class="info-icon">?</span>
+          <h3 id="info-title">Welcome</h3>
+        </div>
+        <div id="info-body">
+          <p>Click on any section or metric to learn what it measures and why it matters for comparing human vs. agent code.</p>
+        </div>
       </div>
-      <div id="graph-chart"></div>
-    </section>
-  </main>
+    </aside>
+  </div>
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="/static/js/infopanel.js"></script>
   <script src="/static/js/timeline.js"></script>
   <script src="/static/js/topology.js"></script>
   <script src="/static/js/graph.js"></script>

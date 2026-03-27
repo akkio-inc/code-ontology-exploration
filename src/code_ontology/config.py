@@ -37,8 +37,8 @@ SPECIMENS: list[Specimen] = [
         url="https://github.com/All-Hands-AI/OpenHands",
     ),
     Specimen(
-        name="claudeos",
-        url="https://github.com/ssochi/ClaudeOS",
+        name="openclaw",
+        url="https://github.com/openclaw/openclaw",
     ),
 ]
 

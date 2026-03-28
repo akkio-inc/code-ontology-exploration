@@ -248,6 +248,146 @@ def compute_change_entropy(commits: list[dict]) -> dict:
     }
 
 
+def compute_burstiness(commits: list[dict]) -> dict:
+    """Compute temporal burstiness of commit activity.
+
+    Burstiness B = (σ - μ) / (σ + μ) where σ and μ are the std dev and mean
+    of inter-event times. B ranges from -1 (perfectly periodic) to +1 (maximally bursty).
+    B ≈ 0 means random (Poisson process).
+
+    Also computes per-file inter-event time distributions.
+    """
+    from datetime import datetime
+
+    # Global inter-commit times
+    timestamps = sorted(
+        datetime.fromisoformat(c["timestamp"]) for c in commits
+    )
+
+    def _burstiness(times: list[datetime]) -> float | None:
+        if len(times) < 3:
+            return None
+        iets = [(times[i + 1] - times[i]).total_seconds() / 3600
+                for i in range(len(times) - 1)]
+        iets = [t for t in iets if t > 0]
+        if not iets or len(iets) < 2:
+            return None
+        mu = sum(iets) / len(iets)
+        sigma = (sum((t - mu) ** 2 for t in iets) / len(iets)) ** 0.5
+        if sigma + mu == 0:
+            return 0.0
+        return round((sigma - mu) / (sigma + mu), 4)
+
+    global_burstiness = _burstiness(timestamps)
+
+    # Per-file inter-event times (for top 50 most-touched files)
+    file_timestamps: dict[str, list[datetime]] = defaultdict(list)
+    for c in commits:
+        ts = datetime.fromisoformat(c["timestamp"])
+        for f in c["files"]:
+            file_timestamps[f["path"]].append(ts)
+
+    # Sort by most commits
+    top_files = sorted(file_timestamps.items(), key=lambda x: -len(x[1]))[:50]
+    per_file_burstiness = []
+    for path, times in top_files:
+        times.sort()
+        b = _burstiness(times)
+        if b is not None:
+            per_file_burstiness.append({
+                "file": path,
+                "burstiness": b,
+                "num_events": len(times),
+            })
+
+    # Inter-event time histogram (global, in hours, bucketed)
+    if len(timestamps) > 1:
+        iets_hours = [(timestamps[i + 1] - timestamps[i]).total_seconds() / 3600
+                      for i in range(len(timestamps) - 1)]
+        iets_hours = [t for t in iets_hours if t > 0]
+        # Bucket into log-scale bins
+        iet_buckets: dict[str, int] = defaultdict(int)
+        for t in iets_hours:
+            if t < 1:
+                bucket = "<1h"
+            elif t < 4:
+                bucket = "1-4h"
+            elif t < 8:
+                bucket = "4-8h"
+            elif t < 24:
+                bucket = "8-24h"
+            elif t < 72:
+                bucket = "1-3d"
+            elif t < 168:
+                bucket = "3-7d"
+            else:
+                bucket = ">7d"
+            iet_buckets[bucket] += 1
+        iet_histogram = [{"bucket": k, "count": v} for k, v in iet_buckets.items()]
+    else:
+        iet_histogram = []
+
+    avg_file_burstiness = (
+        round(sum(f["burstiness"] for f in per_file_burstiness) / len(per_file_burstiness), 4)
+        if per_file_burstiness else None
+    )
+
+    return {
+        "global_burstiness": global_burstiness,
+        "avg_file_burstiness": avg_file_burstiness,
+        "per_file_burstiness": per_file_burstiness[:20],
+        "iet_histogram": iet_histogram,
+    }
+
+
+def compute_directory_coupling(commits: list[dict]) -> dict:
+    """Compute directory-to-directory co-change flow for chord diagram.
+
+    For each commit, find which top-level directories are touched.
+    Build a matrix of how often each pair of directories co-changes.
+    """
+    dir_pair_counts: dict[tuple[str, str], int] = defaultdict(int)
+    dir_commit_counts: dict[str, int] = defaultdict(int)
+
+    for c in commits:
+        files = [f["path"] for f in c["files"]]
+        dirs = sorted(set(_dir_of(f) for f in files))
+        if len(dirs) < 1:
+            continue
+
+        for d in dirs:
+            dir_commit_counts[d] += 1
+
+        # Self-loops count intra-directory commits
+        if len(dirs) == 1:
+            dir_pair_counts[(dirs[0], dirs[0])] += 1
+        else:
+            from itertools import combinations
+            for a, b in combinations(dirs, 2):
+                dir_pair_counts[(a, b)] += 1
+
+    # Filter to top 20 most active directories
+    top_dirs = sorted(dir_commit_counts.items(), key=lambda x: -x[1])[:20]
+    top_dir_names = [d for d, _ in top_dirs]
+
+    # Build matrix
+    matrix: list[list[int]] = []
+    for d1 in top_dir_names:
+        row = []
+        for d2 in top_dir_names:
+            key = tuple(sorted([d1, d2]))
+            row.append(dir_pair_counts.get(key, 0))
+        matrix.append(row)
+
+    return {
+        "directories": top_dir_names,
+        "matrix": matrix,
+        "dir_commit_counts": [
+            {"dir": d, "commits": c} for d, c in top_dirs
+        ],
+    }
+
+
 def compute_topology(commits: list[dict], graph: nx.Graph) -> dict:
     """Compute all topology metrics for a specimen."""
     return {
@@ -255,6 +395,8 @@ def compute_topology(commits: list[dict], graph: nx.Graph) -> dict:
         "commit_shape": compute_commit_shape(commits),
         "churn_hotspots": compute_churn_hotspots(commits),
         "change_entropy": compute_change_entropy(commits),
+        "burstiness": compute_burstiness(commits),
+        "directory_coupling": compute_directory_coupling(commits),
     }
 
 

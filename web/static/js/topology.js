@@ -40,6 +40,17 @@ const Topology = (() => {
     ));
     wrap.appendChild(histRow);
 
+    // Burstiness + IET histogram row
+    if (data.burstiness) {
+      const burstRow = document.createElement("div");
+      burstRow.className = "topo-hist-row";
+      burstRow.appendChild(renderIETHistogram(data.burstiness.iet_histogram));
+      if (data.directory_coupling) {
+        burstRow.appendChild(renderChordDiagram(data.directory_coupling));
+      }
+      wrap.appendChild(burstRow);
+    }
+
     // Hotspots + bridge files
     const detailRow = document.createElement("div");
     detailRow.className = "topo-detail-row";
@@ -68,6 +79,7 @@ const Topology = (() => {
     const ch = data.churn_hotspots;
     const ce = data.change_entropy;
 
+    const bu = data.burstiness || {};
     const cards = [
       { label: "Modularity", value: g.modularity.toFixed(3), desc: "Higher = cleaner clusters" },
       { label: "Communities", value: g.num_communities, desc: "Detected groups" },
@@ -79,6 +91,8 @@ const Topology = (() => {
       { label: "Churn Gini", value: ch.churn_gini.toFixed(3), desc: "0=equal, 1=concentrated" },
       { label: "Change Entropy", value: ce.avg_change_entropy.toFixed(2) + " bits", desc: "Higher = flexible coupling" },
       { label: "Author Entropy", value: ch.avg_author_entropy.toFixed(2) + " bits", desc: "Higher = shared ownership" },
+      { label: "Burstiness", value: bu.global_burstiness != null ? bu.global_burstiness.toFixed(3) : "N/A", desc: "-1=periodic, 0=random, +1=bursty" },
+      { label: "File Burstiness", value: bu.avg_file_burstiness != null ? bu.avg_file_burstiness.toFixed(3) : "N/A", desc: "Avg per-file temporal pattern" },
     ];
 
     const row = document.createElement("div");
@@ -240,6 +254,140 @@ const Topology = (() => {
     });
     table.appendChild(tbody);
     div.appendChild(table);
+    return div;
+  }
+
+  function renderIETHistogram(data) {
+    const div = document.createElement("div");
+    div.className = "topo-chart";
+    div.setAttribute("data-info-key", "hist_iet");
+
+    const header = document.createElement("h4");
+    header.textContent = "Inter-Event Time Distribution";
+    div.appendChild(header);
+
+    if (!data || data.length === 0) {
+      div.innerHTML += '<p style="color:#555;font-size:0.7rem">No data</p>';
+      return div;
+    }
+
+    const chartW = 320, chartH = 180;
+    const margin = { top: 10, right: 10, bottom: 30, left: 40 };
+    const w = chartW - margin.left - margin.right;
+    const h = chartH - margin.top - margin.bottom;
+
+    // Fixed order for buckets
+    const order = ["<1h", "1-4h", "4-8h", "8-24h", "1-3d", "3-7d", ">7d"];
+    const ordered = order.map(b => {
+      const found = data.find(d => d.bucket === b);
+      return { bucket: b, count: found ? found.count : 0 };
+    }).filter(d => d.count > 0);
+
+    const svg = d3.select(div).append("svg")
+      .attr("width", chartW).attr("height", chartH)
+      .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleBand()
+      .domain(ordered.map(d => d.bucket))
+      .range([0, w]).padding(0.15);
+
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(ordered, d => d.count) || 1])
+      .range([h, 0]).nice();
+
+    svg.selectAll("rect").data(ordered).join("rect")
+      .attr("x", d => x(d.bucket))
+      .attr("y", d => y(d.count))
+      .attr("width", x.bandwidth())
+      .attr("height", d => h - y(d.count))
+      .attr("fill", "#f59e0b")
+      .attr("fill-opacity", 0.7);
+
+    svg.append("g").attr("transform", `translate(0,${h})`)
+      .call(d3.axisBottom(x))
+      .selectAll("text").attr("fill", "#666").attr("font-size", "7px")
+      .attr("transform", "rotate(-30)").attr("text-anchor", "end");
+
+    svg.append("g").call(d3.axisLeft(y).ticks(4).tickFormat(d3.format(".0s")))
+      .selectAll("text").attr("fill", "#666").attr("font-size", "8px");
+
+    svg.selectAll(".domain, .tick line").attr("stroke", "#2a2a3e");
+
+    return div;
+  }
+
+  function renderChordDiagram(data) {
+    const div = document.createElement("div");
+    div.className = "topo-chart";
+    div.setAttribute("data-info-key", "chord_dirs");
+
+    const header = document.createElement("h4");
+    header.textContent = "Directory Coupling (Chord)";
+    div.appendChild(header);
+
+    if (!data || !data.directories || data.directories.length < 2) {
+      div.innerHTML += '<p style="color:#555;font-size:0.7rem">Not enough directories</p>';
+      return div;
+    }
+
+    const size = 320;
+    const outerRadius = size / 2 - 30;
+    const innerRadius = outerRadius - 15;
+
+    const svg = d3.select(div).append("svg")
+      .attr("width", size).attr("height", size)
+      .append("g").attr("transform", `translate(${size / 2},${size / 2})`);
+
+    const chord = d3.chord().padAngle(0.05).sortSubgroups(d3.descending);
+    const chords = chord(data.matrix);
+
+    const arc = d3.arc().innerRadius(innerRadius).outerRadius(outerRadius);
+    const ribbon = d3.ribbon().radius(innerRadius);
+
+    const color = d3.scaleOrdinal()
+      .domain(d3.range(data.directories.length))
+      .range(d3.schemeTableau10);
+
+    // Groups (arcs)
+    const group = svg.append("g")
+      .selectAll("g")
+      .data(chords.groups)
+      .join("g");
+
+    group.append("path")
+      .attr("d", arc)
+      .attr("fill", d => color(d.index))
+      .attr("stroke", "#0a0a0f");
+
+    group.append("text")
+      .each(d => { d.angle = (d.startAngle + d.endAngle) / 2; })
+      .attr("dy", "0.35em")
+      .attr("transform", d =>
+        `rotate(${(d.angle * 180 / Math.PI - 90)})` +
+        `translate(${outerRadius + 5})` +
+        (d.angle > Math.PI ? "rotate(180)" : "")
+      )
+      .attr("text-anchor", d => d.angle > Math.PI ? "end" : "start")
+      .attr("fill", "#888")
+      .attr("font-size", "7px")
+      .text(d => {
+        const name = data.directories[d.index];
+        return name.length > 12 ? name.slice(0, 12) + "…" : name;
+      });
+
+    // Ribbons
+    svg.append("g")
+      .attr("fill-opacity", 0.5)
+      .selectAll("path")
+      .data(chords)
+      .join("path")
+      .attr("d", ribbon)
+      .attr("fill", d => color(d.source.index))
+      .attr("stroke", "#0a0a0f")
+      .attr("stroke-width", 0.5)
+      .on("mouseover", function() { d3.select(this).attr("fill-opacity", 0.8); })
+      .on("mouseout", function() { d3.select(this).attr("fill-opacity", 0.5); });
+
     return div;
   }
 

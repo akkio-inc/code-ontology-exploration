@@ -44,8 +44,19 @@
             <input type="range" id="edge-weight" min="1" max="20" value="3">
             <span id="edge-weight-val">3</span>
           </label>
+          <label>Color by:
+            <select id="graph-color-mode">
+              <option value="directory">Directory</option>
+              <option value="community">Community (Louvain)</option>
+            </select>
+          </label>
         </div>
         <div id="graph-chart"></div>
+      </section>
+
+      <section id="compare-section" data-info="compare">
+        <h2>Specimen Comparison</h2>
+        <div id="compare-dashboard"></div>
       </section>
     </main>
 
@@ -67,6 +78,7 @@
   <script src="/static/js/timeline.js"></script>
   <script src="/static/js/topology.js"></script>
   <script src="/static/js/graph.js"></script>
+  <script src="/static/js/compare.js"></script>
   <script src="/static/js/app.js"></script>
 </body>
 </html>

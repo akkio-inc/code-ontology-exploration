@@ -154,6 +154,50 @@ const InfoPanel = (() => {
       insight: "A power-law tail means the codebase has \"hub\" files that everything depends on. A steeper slope means more extreme concentration around hubs."
     },
 
+    // --- Burstiness cards ---
+    card_burstiness: {
+      title: "Burstiness Parameter",
+      desc: "Measures how bursty (clustered in time) the commit activity is. Ranges from -1 (perfectly periodic, like a metronome) to +1 (maximally bursty, like earthquake aftershocks). B=0 means random (Poisson process).",
+      math: "B = (σ - μ) / (σ + μ) where σ is the standard deviation and μ is the mean of inter-event times (hours between consecutive commits).",
+      insight: "Human projects often show high burstiness (work in sprints/bursts). Agent-authored code might be more uniform (lower burstiness) since agents don't have lunch breaks, weekends, or focus shifts."
+    },
+    card_file_burstiness: {
+      title: "File Burstiness (Average)",
+      desc: "Same burstiness formula but applied per-file: how bursty is the edit pattern for individual files? Averaged across the top 50 most-touched files.",
+      insight: "High file burstiness means files get edited in bursts then go quiet. Low means steady, distributed edits. Agent code might show lower per-file burstiness if it touches files more uniformly over time."
+    },
+
+    // --- New charts ---
+    hist_iet: {
+      title: "Inter-Event Time Distribution",
+      desc: "A histogram of time gaps between consecutive commits, bucketed into human-readable intervals. Shows the temporal rhythm of development.",
+      insight: "Human projects typically show clear daily/weekly patterns (gaps at nights/weekends). Agent-authored projects might have more uniform distributions or very short inter-event times."
+    },
+    chord_dirs: {
+      title: "Directory Coupling (Chord Diagram)",
+      desc: "Shows which top-level directories change together in the same commits. Thicker ribbons mean more cross-directory coupling. The arc size shows each directory's total commit activity.",
+      insight: "Strong coupling between directories means changes in one area often require changes in another. Well-modularized code has thin ribbons (each directory changes independently)."
+    },
+
+    // --- Color modes ---
+    color_community: {
+      title: "Community Coloring (Louvain)",
+      desc: "Nodes are colored by their detected community, not their file directory. The Louvain algorithm finds groups of files that change together more often than you'd expect by chance.",
+      insight: "If community colors align with directory colors, the codebase is well-organized. If they don't, there's a mismatch between the file system structure and the actual change patterns."
+    },
+    color_directory: {
+      title: "Directory Coloring",
+      desc: "Nodes are colored by their top-level directory. This shows the file system organization of the codebase.",
+      insight: "Compare with community coloring to see if the directory structure matches the actual coupling patterns."
+    },
+
+    // --- Comparison ---
+    compare: {
+      title: "Specimen Comparison",
+      desc: "Side-by-side comparison of all specimens with processed data. The table shows raw metrics, and the radar chart normalizes them to a 0-1 scale for visual comparison.",
+      insight: "This is the core output: if human and agent code have detectably different structural signatures, they'll show different shapes on the radar chart."
+    },
+
     // --- Tables ---
     table_hotspots: {
       title: "Churn Hotspots",

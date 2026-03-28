@@ -7,6 +7,7 @@ const Graph = (() => {
   let svg, width, height, simulation;
   let currentData = null;
   let minWeight = 3;
+  let colorMode = "directory"; // "directory" or "community"
 
   function init(container) {
     const rect = container.getBoundingClientRect();
@@ -56,11 +57,12 @@ const Graph = (() => {
       return;
     }
 
-    // Color by directory group
-    const groups = [...new Set(nodes.map(n => n.group))];
+    // Color by directory or community
+    const colorKey = colorMode === "community" ? "community" : "group";
+    const colorValues = [...new Set(nodes.map(n => n[colorKey]))];
     const color = d3.scaleOrdinal()
-      .domain(groups)
-      .range(d3.schemeTableau10);
+      .domain(colorValues)
+      .range(colorMode === "community" ? d3.schemeCategory10 : d3.schemeTableau10);
 
     // Edge weight → thickness
     const maxWeight = d3.max(links, l => l.weight) || 1;
@@ -96,7 +98,7 @@ const Graph = (() => {
       .data(nodes)
       .join("circle")
       .attr("r", d => nodeScale(d.degree))
-      .attr("fill", d => color(d.group))
+      .attr("fill", d => color(d[colorKey]))
       .attr("fill-opacity", 0.8)
       .attr("stroke", "#0a0a0f")
       .attr("stroke-width", 0.5)
@@ -179,5 +181,10 @@ const Graph = (() => {
       });
   }
 
-  return { init, render, updateThreshold };
+  function setColorMode(mode) {
+    colorMode = mode;
+    if (currentData) render(currentData, minWeight);
+  }
+
+  return { init, render, updateThreshold, setColorMode };
 })();

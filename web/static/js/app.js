@@ -39,6 +39,8 @@
   Timeline.init(document.getElementById("timeline-chart"));
   Topology.init(document.getElementById("topology-dashboard"));
   Graph.init(document.getElementById("graph-chart"));
+  Compare.init(document.getElementById("compare-dashboard"));
+  Compare.loadAll();
 
   // Wire up controls — timeline metric dropdown
   document.getElementById("timeline-metric").addEventListener("change", e => {
@@ -52,6 +54,12 @@
   edgeSlider.addEventListener("input", e => {
     edgeVal.textContent = e.target.value;
     Graph.updateThreshold(parseInt(e.target.value));
+  });
+
+  // Wire up controls — graph color mode
+  document.getElementById("graph-color-mode").addEventListener("change", e => {
+    Graph.setColorMode(e.target.value);
+    InfoPanel.show(e.target.value === "community" ? "color_community" : "color_directory");
   });
 
   // --- Info panel: section hover/scroll detection ---
@@ -86,6 +94,8 @@
         "churn gini": "card_churn_gini",
         "change entropy": "card_change_entropy",
         "author entropy": "card_author_entropy",
+        "burstiness": "card_burstiness",
+        "file burstiness": "card_file_burstiness",
       };
       const infoKey = keyMap[label];
       if (infoKey) {
@@ -104,6 +114,9 @@
         "Files per Commit": "hist_files_per_commit",
         "Directories per Commit": "hist_dirs_per_commit",
         "Degree Distribution (log-log)": "hist_degree",
+        "Inter-Event Time Distribution": "hist_iet",
+        "Directory Coupling (Chord)": "chord_dirs",
+        "Structural Fingerprint (Radar)": "compare",
       };
       const infoKey = chartMap[title];
       if (infoKey) InfoPanel.show(infoKey);

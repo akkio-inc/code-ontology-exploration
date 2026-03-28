@@ -60,7 +60,21 @@ def build_cochange_graph(
 
 
 def graph_to_json(G: nx.Graph) -> dict:
-    """Convert networkx graph to a D3-friendly JSON structure."""
+    """Convert networkx graph to a D3-friendly JSON structure.
+
+    Includes Louvain community detection so the frontend can color by
+    either directory or detected community.
+    """
+    from networkx.algorithms.community import greedy_modularity_communities
+
+    # Detect communities
+    community_map: dict[str, int] = {}
+    if G.number_of_nodes() > 0:
+        communities = list(greedy_modularity_communities(G))
+        for i, community in enumerate(communities):
+            for node in community:
+                community_map[node] = i
+
     nodes = []
     for node_id, data in G.nodes(data=True):
         # Extract directory for grouping
@@ -69,6 +83,7 @@ def graph_to_json(G: nx.Graph) -> dict:
         nodes.append({
             "id": node_id,
             "group": group,
+            "community": community_map.get(node_id, 0),
             "commit_count": data.get("commit_count", 0),
             "degree": G.degree(node_id),
         })
@@ -81,7 +96,11 @@ def graph_to_json(G: nx.Graph) -> dict:
             "weight": data.get("weight", 1),
         })
 
-    return {"nodes": nodes, "links": links}
+    return {
+        "nodes": nodes,
+        "links": links,
+        "num_communities": len(set(community_map.values())) if community_map else 0,
+    }
 
 
 def save_cochange_graph(G: nx.Graph, specimen_name: str) -> Path:

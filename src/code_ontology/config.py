@@ -29,8 +29,8 @@ SPECIMENS: list[Specimen] = [
         name="linux-fs",
         url="https://github.com/torvalds/linux",
         subpath="fs/",
-        since="2019-01-01",
-        until="2021-12-31",
+        since="2018-01-01",
+        until="2019-01-31",
     ),
     Specimen(
         name="openhands",

@@ -20,4 +20,10 @@ dev = [
 
 [tool.ruff]
 target-version = "py311"
-line-length = 100
+line-length = 120
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "I", "PLE"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["code_ontology"]

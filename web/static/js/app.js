@@ -42,6 +42,9 @@
   Compare.init(document.getElementById("compare-dashboard"));
   Compare.loadAll();
 
+  Lab.init(document.getElementById("lab-dashboard"));
+  Lab.loadAll();
+
   // Wire up controls — timeline metric dropdown
   document.getElementById("timeline-metric").addEventListener("change", e => {
     Timeline.updateMetric(e.target.value);

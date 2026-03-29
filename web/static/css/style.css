@@ -418,3 +418,52 @@ h2 {
 #compare-dashboard > .topo-chart {
   flex: 0 0 350px;
 }
+
+/* Lab dashboard */
+#lab-dashboard {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.lab-chart {
+  background: #0d0d15;
+  border: 1px solid #1a1a2e;
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 250px;
+}
+
+.lab-chart h4 {
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.lab-chart .lab-subtitle {
+  font-size: 0.65rem;
+  color: #555;
+  margin-top: -8px;
+  margin-bottom: 12px;
+}
+
+.lab-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  font-size: 0.7rem;
+}
+
+.lab-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #888;
+}
+
+.lab-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}

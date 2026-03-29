@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from code_ontology.config import PROCESSED_DIR, SPECIMENS
+from code_ontology.config import PROCESSED_DIR, RAW_DIR, SPECIMENS
 
 app = FastAPI(title="Code Ontology Explorer")
 
@@ -58,6 +58,15 @@ def get_topology(specimen_name: str):
     path = PROCESSED_DIR / f"{specimen_name}_topology.json"
     if not path.exists():
         raise HTTPException(404, f"No topology data for {specimen_name}")
+    data = orjson.loads(path.read_bytes())
+    return Response(content=orjson.dumps(data), media_type="application/json")
+
+
+@app.get("/api/commits/{specimen_name}")
+def get_commits(specimen_name: str):
+    path = RAW_DIR / f"{specimen_name}_commits.json"
+    if not path.exists():
+        raise HTTPException(404, f"No commit data for {specimen_name}")
     data = orjson.loads(path.read_bytes())
     return Response(content=orjson.dumps(data), media_type="application/json")
 

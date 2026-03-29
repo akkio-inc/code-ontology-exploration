@@ -191,6 +191,13 @@ const InfoPanel = (() => {
       insight: "Compare with community coloring to see if the directory structure matches the actual coupling patterns."
     },
 
+    // --- Lab ---
+    lab: {
+      title: "Comparative Lab",
+      desc: "A wall of charts comparing all three specimens side by side. Each chart tests a different dimension of the human\u2192agent hypothesis. Look for consistent patterns across multiple chart types.",
+      insight: "If the specimens truly have different structural signatures, the differences should be visible across many independent metrics, not just one or two."
+    },
+
     // --- Comparison ---
     compare: {
       title: "Specimen Comparison",

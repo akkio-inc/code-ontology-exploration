@@ -388,6 +388,55 @@ def compute_directory_coupling(commits: list[dict]) -> dict:
     }
 
 
+def compute_temporal_patterns(commits: list[dict]) -> dict:
+    """Extract temporal commit patterns: hour-of-day, day-of-week, heatmap, message lengths."""
+    from datetime import datetime
+
+    hour_counts = [0] * 24
+    dow_counts = [0] * 7  # 0=Monday, 6=Sunday
+    heatmap = [[0] * 7 for _ in range(24)]  # hour x dow
+    msg_lengths: list[int] = []
+
+    for c in commits:
+        ts = datetime.fromisoformat(c["timestamp"])
+        hour = ts.hour
+        dow = ts.weekday()  # 0=Monday
+        hour_counts[hour] += 1
+        dow_counts[dow] += 1
+        heatmap[hour][dow] += 1
+
+        msg = c.get("message", "")
+        msg_lengths.append(len(msg))
+
+    # Message length histogram (buckets)
+    msg_buckets: dict[str, int] = defaultdict(int)
+    for ml in msg_lengths:
+        if ml < 20:
+            bucket = "0-19"
+        elif ml < 50:
+            bucket = "20-49"
+        elif ml < 100:
+            bucket = "50-99"
+        elif ml < 200:
+            bucket = "100-199"
+        elif ml < 500:
+            bucket = "200-499"
+        else:
+            bucket = "500+"
+        msg_buckets[bucket] += 1
+
+    return {
+        "hour_of_day": [{"hour": h, "count": c} for h, c in enumerate(hour_counts)],
+        "day_of_week": [{"day": d, "count": c} for d, c in enumerate(dow_counts)],
+        "heatmap": heatmap,  # 24x7 matrix, [hour][dow]
+        "msg_length_histogram": [
+            {"bucket": b, "count": c}
+            for b, c in sorted(msg_buckets.items(), key=lambda x: int(x[0].split("-")[0].replace("+", "")))
+        ],
+        "avg_msg_length": round(sum(msg_lengths) / len(msg_lengths), 1) if msg_lengths else 0,
+    }
+
+
 def compute_topology(commits: list[dict], graph: nx.Graph) -> dict:
     """Compute all topology metrics for a specimen."""
     return {
@@ -397,6 +446,7 @@ def compute_topology(commits: list[dict], graph: nx.Graph) -> dict:
         "change_entropy": compute_change_entropy(commits),
         "burstiness": compute_burstiness(commits),
         "directory_coupling": compute_directory_coupling(commits),
+        "temporal_patterns": compute_temporal_patterns(commits),
     }
 
 

@@ -26,11 +26,10 @@ class Specimen:
 # The three specimens on the human → agent spectrum
 SPECIMENS: list[Specimen] = [
     Specimen(
-        name="linux-fs",
-        url="https://github.com/torvalds/linux",
-        subpath="fs/",
-        since="2018-01-01",
-        until="2019-01-31",
+        name="django",
+        url="https://github.com/django/django",
+        since="2020-01-01",
+        until="2021-01-31",
     ),
     Specimen(
         name="openhands",

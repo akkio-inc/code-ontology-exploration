@@ -22,6 +22,7 @@ def list_specimens():
         has_timeline = (PROCESSED_DIR / f"{s.name}_timeline.json").exists()
         has_cochange = (PROCESSED_DIR / f"{s.name}_cochange.json").exists()
         has_topology = (PROCESSED_DIR / f"{s.name}_topology.json").exists()
+        has_authors = (PROCESSED_DIR / f"{s.name}_authors.json").exists()
         results.append({
             "name": s.name,
             "url": s.url,
@@ -31,6 +32,7 @@ def list_specimens():
             "has_timeline": has_timeline,
             "has_cochange": has_cochange,
             "has_topology": has_topology,
+            "has_authors": has_authors,
         })
     return results
 
@@ -58,6 +60,15 @@ def get_topology(specimen_name: str):
     path = PROCESSED_DIR / f"{specimen_name}_topology.json"
     if not path.exists():
         raise HTTPException(404, f"No topology data for {specimen_name}")
+    data = orjson.loads(path.read_bytes())
+    return Response(content=orjson.dumps(data), media_type="application/json")
+
+
+@app.get("/api/authors/{specimen_name}")
+def get_authors(specimen_name: str):
+    path = PROCESSED_DIR / f"{specimen_name}_authors.json"
+    if not path.exists():
+        raise HTTPException(404, f"No author classification data for {specimen_name}")
     data = orjson.loads(path.read_bytes())
     return Response(content=orjson.dumps(data), media_type="application/json")
 

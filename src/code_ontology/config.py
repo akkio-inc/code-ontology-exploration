@@ -122,6 +122,10 @@ SPECIMENS: list[Specimen] = [
         name="awesome-openclaw-agents",
         url="https://github.com/mergisi/awesome-openclaw-agents",
     ),
+    Specimen(
+        name="mempalace",
+        url="https://github.com/milla-jovovich/mempalace",
+    ),
 ]
 
 

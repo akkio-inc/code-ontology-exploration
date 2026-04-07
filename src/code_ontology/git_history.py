@@ -81,7 +81,7 @@ def extract_history(repo: Repo, specimen: Specimen) -> list[CommitRecord]:
             author_name=commit.author.name or "",
             author_email=commit.author.email or "",
             timestamp=ts,
-            message=commit.message.split("\n")[0][:200],
+            message=commit.message.strip()[:2000],
             files=files,
             total_insertions=total_ins,
             total_deletions=total_del,

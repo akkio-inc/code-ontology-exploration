@@ -38,6 +38,7 @@
   // Initialize charts
   Timeline.init(document.getElementById("timeline-chart"));
   Topology.init(document.getElementById("topology-dashboard"));
+  Authors.init(document.getElementById("authors-dashboard"));
   Graph.init(document.getElementById("graph-chart"));
   Compare.init(document.getElementById("compare-dashboard"));
   Compare.loadAll();
@@ -66,19 +67,28 @@
   });
 
   // --- Info panel: section hover/scroll detection ---
-  // Update info panel when scrolling into a section
+  // Pick the section closest to the top of the viewport
   const sections = document.querySelectorAll("section[data-info]");
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
-        const key = entry.target.dataset.info;
-        InfoPanel.show(key);
-        // Highlight active section
-        sections.forEach(s => s.classList.remove("info-active"));
-        entry.target.classList.add("info-active");
+  const observer = new IntersectionObserver(() => {
+    let best = null;
+    let bestDist = Infinity;
+    sections.forEach(s => {
+      const rect = s.getBoundingClientRect();
+      // Section must be at least partially visible
+      if (rect.bottom > 0 && rect.top < window.innerHeight) {
+        const dist = Math.abs(rect.top);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = s;
+        }
       }
     });
-  }, { threshold: 0.3 });
+    if (best) {
+      InfoPanel.show(best.dataset.info);
+      sections.forEach(s => s.classList.remove("info-active"));
+      best.classList.add("info-active");
+    }
+  }, { threshold: [0, 0.1, 0.3, 0.5, 0.7, 1.0] });
   sections.forEach(s => observer.observe(s));
 
   // --- Info panel: topology card clicks ---
@@ -157,13 +167,15 @@
     // Re-init after clearing
     Timeline.init(timelineEl);
     Topology.init(document.getElementById("topology-dashboard"));
+    Authors.init(document.getElementById("authors-dashboard"));
     Graph.init(graphEl);
 
     try {
-      const [timelineData, graphData, topoData] = await Promise.all([
+      const [timelineData, graphData, topoData, authorsData] = await Promise.all([
         fetch(`/api/timeline/${name}`).then(r => r.ok ? r.json() : null),
         fetch(`/api/cochange/${name}`).then(r => r.ok ? r.json() : null),
         fetch(`/api/topology/${name}`).then(r => r.ok ? r.json() : null),
+        fetch(`/api/authors/${name}`).then(r => r.ok ? r.json() : null),
       ]);
 
       const metric = document.getElementById("timeline-metric").value;
@@ -171,6 +183,7 @@
       InfoPanel.show("metric_" + metric);
 
       Topology.render(topoData);
+      Authors.render(authorsData);
 
       const threshold = parseInt(document.getElementById("edge-weight").value);
       Graph.render(graphData, threshold);

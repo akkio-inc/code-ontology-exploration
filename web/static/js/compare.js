@@ -54,6 +54,10 @@ const Compare = (() => {
       { label: "Author Entropy", get: d => d.churn_hotspots.avg_author_entropy.toFixed(2) },
       { label: "Burstiness", get: d => d.burstiness?.global_burstiness?.toFixed(3) ?? "N/A" },
       { label: "File Burstiness", get: d => d.burstiness?.avg_file_burstiness?.toFixed(3) ?? "N/A" },
+      { label: "Multiline Msg %", get: d => ((d.temporal_patterns?.commit_message_metrics?.multiline_ratio ?? 0) * 100).toFixed(1) + "%" },
+      { label: "Conventional %", get: d => ((d.temporal_patterns?.commit_message_metrics?.conventional_commit_ratio ?? 0) * 100).toFixed(1) + "%" },
+      { label: "Co-Author Tags", get: d => d.temporal_patterns?.commit_message_metrics?.coauthor_count ?? 0 },
+      { label: "Avg Msg Lines", get: d => d.temporal_patterns?.commit_message_metrics?.avg_lines_per_message ?? "N/A" },
     ];
 
     const table = document.createElement("table");

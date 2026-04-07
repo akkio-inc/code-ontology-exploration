@@ -51,6 +51,17 @@ const Topology = (() => {
       wrap.appendChild(burstRow);
     }
 
+    // Commit message metrics + per-author temporal row
+    if (data.temporal_patterns?.commit_message_metrics) {
+      const msgRow = document.createElement("div");
+      msgRow.className = "topo-hist-row";
+      msgRow.appendChild(renderCommitMessageCards(data.temporal_patterns));
+      if (data.temporal_patterns?.by_author_category) {
+        msgRow.appendChild(renderAuthorHourChart(data.temporal_patterns.by_author_category));
+      }
+      wrap.appendChild(msgRow);
+    }
+
     // Hotspots + bridge files
     const detailRow = document.createElement("div");
     detailRow.className = "topo-detail-row";
@@ -387,6 +398,121 @@ const Topology = (() => {
       .attr("stroke-width", 0.5)
       .on("mouseover", function() { d3.select(this).attr("fill-opacity", 0.8); })
       .on("mouseout", function() { d3.select(this).attr("fill-opacity", 0.5); });
+
+    return div;
+  }
+
+  function renderCommitMessageCards(tp) {
+    const div = document.createElement("div");
+    div.className = "topo-chart";
+
+    const header = document.createElement("h4");
+    header.textContent = "Commit Message Fingerprint";
+    div.appendChild(header);
+
+    const cm = tp.commit_message_metrics;
+    const metrics = [
+      { label: "Multiline Ratio", value: (cm.multiline_ratio * 100).toFixed(1) + "%", desc: "Commits with body text" },
+      { label: "Conventional", value: (cm.conventional_commit_ratio * 100).toFixed(1) + "%", desc: "feat:, fix:, chore: etc." },
+      { label: "Co-Author Tags", value: cm.coauthor_count, desc: "Co-Authored-By headers" },
+      { label: "Footer Tags", value: cm.footer_count, desc: "Signed-off, Agent-Logs, etc." },
+      { label: "Avg Lines/Msg", value: cm.avg_lines_per_message, desc: "Message verbosity" },
+    ];
+
+    const grid = document.createElement("div");
+    grid.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:6px;";
+    metrics.forEach(m => {
+      const card = document.createElement("div");
+      card.className = "topo-card";
+      card.style.padding = "8px 10px";
+      card.innerHTML = `
+        <div class="topo-card-value" style="font-size:1rem">${m.value}</div>
+        <div class="topo-card-label" style="font-size:0.6rem">${m.label}</div>
+        <div class="topo-card-desc">${m.desc}</div>
+      `;
+      grid.appendChild(card);
+    });
+    div.appendChild(grid);
+    return div;
+  }
+
+  function renderAuthorHourChart(byCategory) {
+    const div = document.createElement("div");
+    div.className = "topo-chart";
+
+    const header = document.createElement("h4");
+    header.textContent = "Commit Hour by Author Type";
+    div.appendChild(header);
+
+    const chartW = 400, chartH = 180;
+    const margin = { top: 10, right: 10, bottom: 30, left: 35 };
+    const w = chartW - margin.left - margin.right;
+    const h = chartH - margin.top - margin.bottom;
+
+    const svg = d3.select(div).append("svg")
+      .attr("width", chartW).attr("height", chartH)
+      .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const colors = { human: "#22d3ee", ai_agent: "#a78bfa", automation_bot: "#fb923c" };
+    const labels = { human: "Human", ai_agent: "AI Agent", automation_bot: "Bot" };
+
+    // Stack the data
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+    const categories = ["human", "ai_agent", "automation_bot"];
+
+    // Build stacked data
+    const stackData = hours.map(h => {
+      const row = { hour: h };
+      categories.forEach(cat => {
+        const hourData = byCategory[cat]?.hour_of_day || [];
+        const found = hourData.find(d => d.hour === h);
+        row[cat] = found ? found.count : 0;
+      });
+      return row;
+    });
+
+    const stack = d3.stack().keys(categories);
+    const series = stack(stackData);
+
+    const x = d3.scaleBand().domain(hours).range([0, w]).padding(0.1);
+    const maxY = d3.max(series, s => d3.max(s, d => d[1])) || 1;
+    const y = d3.scaleLinear().domain([0, maxY]).range([h, 0]);
+
+    // Bars
+    series.forEach(s => {
+      svg.selectAll(`.bar-${s.key}`)
+        .data(s)
+        .join("rect")
+        .attr("x", d => x(d.data.hour))
+        .attr("y", d => y(d[1]))
+        .attr("height", d => y(d[0]) - y(d[1]))
+        .attr("width", x.bandwidth())
+        .attr("fill", colors[s.key]);
+    });
+
+    // Axes
+    svg.append("g").attr("transform", `translate(0,${h})`)
+      .call(d3.axisBottom(x).tickValues([0, 4, 8, 12, 16, 20]).tickFormat(d => d + "h"))
+      .selectAll("text,line,path").attr("stroke", "#444").attr("fill", "#666").style("font-size", "9px");
+
+    svg.append("g")
+      .call(d3.axisLeft(y).ticks(4))
+      .selectAll("text,line,path").attr("stroke", "#444").attr("fill", "#666").style("font-size", "9px");
+
+    // Legend
+    const legend = document.createElement("div");
+    legend.className = "lab-legend";
+    legend.style.marginTop = "8px";
+    categories.forEach(cat => {
+      // Only show if there's data
+      const total = stackData.reduce((sum, d) => sum + d[cat], 0);
+      if (total === 0) return;
+      const item = document.createElement("div");
+      item.className = "lab-legend-item";
+      item.innerHTML = `<span class="lab-legend-dot" style="background:${colors[cat]}"></span>${labels[cat]} (${total.toLocaleString()})`;
+      legend.appendChild(item);
+    });
+    div.appendChild(legend);
 
     return div;
   }

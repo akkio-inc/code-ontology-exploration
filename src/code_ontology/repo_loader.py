@@ -20,7 +20,9 @@ def ensure_repo(specimen: Specimen) -> Repo:
     print(f"  cloning {specimen.url} → {repo_path} ...")
     # Shallow clone is faster but we need history, so full clone
     # For linux kernel, use --filter=blob:none to skip file contents (treeless clone)
-    if "linux" in specimen.url:
+    # Large repos get treeless clones (commit+tree objects only, no file blobs)
+    large_repos = {"linux", "rust", "kubernetes", "go", "next.js", "langchain"}
+    if any(name in specimen.url for name in large_repos):
         print("  (treeless clone for large repo — fetches tree/commit objects only)")
         repo = Repo.clone_from(
             specimen.url,

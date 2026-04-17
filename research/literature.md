@@ -166,9 +166,10 @@ This document catalogs research sources informing the Code Ontology project — 
 ### 8. Coderbuds: Open-Source AI Code Detection YAML Rules
 
 - **Source:** [Coderbuds Blog](https://coderbuds.com/blog/open-source-ai-code-detection-yaml-rules)
+- **Repository:** [coderbuds/ai-detector](https://github.com/coderbuds/ai-detector) (MIT license)
 - **Date:** December 31, 2025
 
-**Summary:** Open-sourced YAML-based detection rules for identifying AI-generated pull requests. Practical system used in production.
+**Summary:** Open-sourced YAML-based detection rules for identifying AI-generated pull requests. Practical system used in production. Covers 9+ AI coding tools via pattern matching on commit footers, co-author attributions, bot authors, branch patterns, PR labels, and HTML comments.
 
 **Detection patterns by tool:**
 
